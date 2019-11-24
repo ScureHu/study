@@ -1,5 +1,9 @@
 package com.huruilei.juc;
 
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * @author: huruilei
  * @date: 2019/10/9
@@ -40,9 +44,53 @@ class Aircondition{
     }
 }
 
+
+class Aircondition1{
+    private int number = 0;
+    private Lock lock = new ReentrantLock();
+    private Condition condtion = lock.newCondition();
+    public void increment() throws Exception {
+        try{
+            lock.lock();
+            //判断
+            while (number != 0){
+               condtion.await();
+            }
+            //干活
+            number++;
+            System.out.println(Thread.currentThread().getName()+"\t"+number);
+            //通知
+            condtion.signalAll();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            lock.unlock();
+        }
+    }
+    public void decrement() throws Exception {
+        try {
+            lock.lock();
+            //判断
+            while (number == 0) {
+                condtion.await();
+            }
+            //干活
+            number--;
+            System.out.println(Thread.currentThread().getName()+"\t"+number);
+            //通知
+            condtion.signalAll();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+
 public class ProdConsumerDemo {
     public static void main(String[] args) {
-        Aircondition aircondition = new Aircondition();
+        Aircondition1 aircondition = new Aircondition1();
         new Thread(()->{
             for(int i = 0;i<10;i++){
                 try {
